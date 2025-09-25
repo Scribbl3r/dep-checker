@@ -7,6 +7,9 @@ import { rimrafSync } from 'rimraf';
 
 const program = new Command();
 
+/* === ============== === */
+/* === OPTIONS LAUNCH === */
+/* === ============== === */
 program
     .option(
         '--fix',
@@ -18,12 +21,20 @@ program
 program.parse(process.argv);
 const options = program.opts();
 
+/* === === === */
+/* === VAR === */
+/* === === === */
+
 let manager = '';
 if (options.npm) manager = 'npm';
 else if (options.yarn) manager = 'yarn';
 else if (options.pnpm) manager = 'pnpm';
 
-// Q - what do you want to do ?
+/* === ============= === */
+/* === ALL FUNCTIONS === */
+/* === ============= === */
+
+/* === MAIN FUNCTION === */
 async function main() {
     if (options.fix) {
         cleanSlate();
@@ -54,10 +65,11 @@ async function main() {
             break;
     }
 }
-
+/* === CALL MAIN FUNCTION === */
 await main();
 
-// 1 - scan pr diff entre installed and declared
+/* === COG FUNCTIONS === */
+// 1 - scan for diff btw installed and declared
 async function isDepMissing() {
     if (!manager) {
         const whichManager = await inquirer.prompt([
@@ -92,7 +104,7 @@ async function isDepMissing() {
 
     return;
 }
-// 2 - scan pr  outdated & vulnerabilities
+// 2 - scan for outdated dep & vulnerabilities
 async function analyseDep() {
     try {
         if (!manager) {
