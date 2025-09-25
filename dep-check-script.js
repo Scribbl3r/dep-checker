@@ -95,6 +95,17 @@ async function isDepMissing() {
 // 2 - scan pr  outdated & vulnerabilities
 async function analyseDep() {
     try {
+        if (!manager) {
+            const whichManager = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'pickManager',
+                    message: 'which one is your manager ?',
+                    choices: ['npm', 'yarn', 'pnpm']
+                }
+            ]);
+            manager = whichManager.pickManager;
+        }
         // 2.1 - get versions with npm outdated
         const outdatedList = await getVersions();
         let updateToWanted = { wantToUpdate: false };
@@ -114,8 +125,9 @@ async function analyseDep() {
             const listDep = await getPackageJSONInfo();
 
             await updateOutdated(
-                Object.keys(listDep.devDependencies),
-                Object.keys(listDep.dependencies),
+                // TODO : ici si pas de devDep on est pas coincé ??
+                Object.keys(listDep.devDependencies || {}),
+                Object.keys(listDep.dependencies || {}),
                 outdatedList
             );
         }
@@ -165,11 +177,11 @@ async function getVersions() {
                 }
             }
         }
+        return outdatedDepList;
     } catch (err) {
         console.log('error :', err);
         return outdatedDepList;
     }
-    return outdatedDepList;
 }
 async function updateOutdated(devDeps, deps, outdated) {
     const installCmd = manager === 'npm' ? 'install' : 'add';
@@ -307,9 +319,7 @@ async function patchVulnerabilities(devDeps, deps, vulnerabilities, mode) {
         console.log(`Running: ${cmd}`);
 
         try {
-            const { stdout, stderr } = execSync(cmd);
-            if (stdout) console.log(stdout);
-            if (stderr) console.error(stderr);
+            const stdout = execSync(cmd);
         } catch (err) {
             console.error(`Error updating ${vuln.name}:`, err.message);
         }
@@ -332,9 +342,9 @@ async function updateVulDep(vulnerabilitiesList) {
         console.log('all right, end of script');
         return;
     }
-    const listDep = getPackageJSONInfo();
-    const devDepList = Object.keys(listDep.devDependencies);
-    const depList = Object.keys(listDep.dependencies);
+    const listDep = await getPackageJSONInfo();
+    const devDepList = Object.keys(listDep.devDependencies || {});
+    const depList = Object.keys(listDep.dependencies || {});
     patchVulnerabilities(devDepList, depList, vulnerabilitiesList, nextStep.whatsnext);
 }
 // 3 - reinstall everything
