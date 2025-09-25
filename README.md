@@ -48,11 +48,11 @@ If you run the script without --fix, you’ll be prompted with:
     something is wrong, reinstall everything
 ```
 
-Objectives scan → Compare installed vs declared dependencies. If mismatched, reinstall.
+**Objectives**
 
-search → Detect outdated deps and vulnerabilities. You’ll be prompted to update.
-
-clean → Delete and reinstall everything.
+-   scan → Compare installed vs declared dependencies. If mismatched, reinstall.
+-   search → Detect outdated deps and vulnerabilities. You’ll be prompted to update.
+-   clean → Delete and reinstall everything.
 
 ## 🔍 Examples
 
@@ -80,28 +80,105 @@ node dep-check-script.js --fix --pnpm
 
 This will:
 
-Remove node_modules and the lockfile
-
-Reinstall everything with pnpm install
+-   Remove `node_modules` and the `lockfile`
+-   Reinstall everything with `pnpm install`
 
 ## 🛠️ Internals
 
-Dependency checks → Runs npm ls, yarn list, or pnpm list.
+Dependency checks → Runs `npm ls`, `yarn list`, or `pnpm list`.
 
-Outdated checks → Uses npm outdated, yarn outdated, or pnpm outdated.
+Outdated checks → Uses `npm outdated`, `yarn outdated`, or `pnpm outdated`.
 
-Vulnerabilities → Uses audit (npm audit, yarn audit, or pnpm audit).
+Vulnerabilities → Uses audit (`npm audit`, `yarn audit`, or `pnpm audit`).
 
-Reinstall → Deletes node_modules and lockfile, then runs the chosen manager’s install.
+Reinstall → Deletes `node_modules` and `lockfile`, then runs the chosen manager’s `install`.
 
 ## ⚠️ Notes
 
-pnpm audit requires an extra package @pnpm/audit (the script will prompt to install it).
+-   `pnpm audit` requires an extra package `@pnpm/audit` (the script will prompt to install it).
+-   Only direct dependencies are updated automatically. Indirect deps require parent updates.
+-   This tool is intended as a helper for developers, not as a replacement for official package managers.
 
-Only direct dependencies are updated automatically. Indirect deps require parent updates.
+---
 
-This tool is intended as a helper for developers, not as a replacement for official package managers.
+---
 
+# 🧪 Test Script – Dependency Manager
+
+This script automatically tests all features of your tool `dep-check-script.js` with npm, yarn, and pnpm. It creates temporary projects, runs your script in different scenarios (scan, search, clean, fix), and generates a detailed report.
+
+## 📦 Installation
+
+Make sure you have Node.js ≥ 18 installed.
+
+Place this script (`test-script.js`) in the same directory as `dep-check-script.js`.
+
+Install the required dependencies:
+
+```bash
+npm install rimraf
 ```
 
+⚠️ At least one package manager (npm, yarn, pnpm) should be installed on your system.
+
+## 🚀 Usage
+
+### Run all tests
+
+```bash
+node test-script.js
 ```
+
+This will:
+
+-   Create a temporary folder test-projects/ with multiple simulated projects.
+-   Install dependencies with each package manager (npm, yarn, pnpm).
+-   Test:
+    -   scan → check for missing dependencies
+    -   search → detect outdated & vulnerable dependencies
+    -   clean → reinstall everything from scratch
+    -   `--fix` → force deletion and reinstallation
+-   Print a summary in the console.
+-   Save a detailed report in test-report.json.
+
+### Show help
+
+```bash
+node test-script.js --help
+```
+
+## 📊 Results
+
+Console output: summary of passed and failed tests by package manager and scenario.
+
+Report file: a test-report.json file is created in the project root with: Global success rate Per-test results Detailed logs
+
+### Example console output:
+
+```yaml
+📊 TEST RESULTS SUMMARY
+=============================
+🧪 SCAN:
+✅ Success: 3/3
+❌ Failures:
+   - outdated-project (pnpm): Manager not available
+
+🧪 SEARCH:
+✅ Success: 2/3
+
+📈 OVERALL SUCCESS RATE: 83.3% (10/12)
+```
+
+## ⚙️ Configuration
+
+**By default**, the script expects your tool to be named `dep-check-script.js`. If your file has a different name, edit the line inside `DependencyTester`:
+
+```js
+this.scriptPath = path.join(process.cwd(), 'dep-check-script.js');
+```
+
+You can add more test scenarios inside the `getTestScenarios()` method.
+
+## 🧹 Cleanup
+
+The script automatically removes the temporary test-projects/ directory after running. If a test crashes, just rerun the script.
